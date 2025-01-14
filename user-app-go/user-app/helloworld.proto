@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+option go_package = "user-project-go/user-app";
+
+package helloworld;
+
+service UserService {
+  rpc PutUser(UserPutRequest) returns (UserPutResponse);
+  // Get user
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // Update user
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
+  // Delete user
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+
+  // List users
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  // List all users
+  rpc ListAllUsers(ListAllUsersRequest) returns (ListAllUserResponse); 
+
+}
+
+
+// User message definition
+message User {
+  string user_id = 1;
+  string first_name = 2;
+  string last_name = 3;
+  string city = 4;
+  string state = 5;
+  string address1 = 6;
+  string address2 = 7;
+  string zip = 8;
+}
+
+// Request/Response messages
+message UserPutRequest {
+  User user = 1;
+}
+
+message UserPutResponse {
+  string message = 1;
+
+}
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+message UpdateUserRequest {
+  User user = 1;
+}
+
+message UpdateUserResponse {
+  string message = 1;
+  User user = 2;
+}
+
+message DeleteUserRequest {
+  string user_id = 1;
+}
+
+message DeleteUserResponse {
+  string message = 1;
+}
+
+message ListUsersRequest {
+  // Can add pagination parameters here
+  int32 page_size = 1;
+  int32 page_number = 2;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total_count = 2;
+}
+
+message ListAllUsersRequest {
+
+}
+
+message ListAllUserResponse {
+  repeated User users = 1;
+}
