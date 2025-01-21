@@ -8,19 +8,29 @@ import (
 	"github.com/redis/go-redis/v9"
 	"log"
 	"net/http"
+<<<<<<< Updated upstream
 	"os"
+=======
+	"sync"
+
+	"github.com/gorilla/websocket"
+>>>>>>> Stashed changes
 )
 
 var app_context *AppContext
 
 type webSocketHandler struct {
 	upgrader websocket.Upgrader
+	mu       sync.RWMutex
 }
 
 type Message struct {
-	From string `json:"from"`
-	To   string `json:"to"`
-	Body string `json:"body"`
+	From      string   `json:"from"`
+	To        string   `json:"to"`
+	Body      string   `json:"body"`
+	IsGroup   bool     `json:"isGroup"`
+	GroupName string   `json:"groupName,omitempty"`
+	Members   []string `json:"members,omitempty"`
 }
 
 type AppContext struct {
@@ -29,10 +39,26 @@ type AppContext struct {
 	ctx                  context.Context
 }
 
+<<<<<<< Updated upstream
 func init_app_context() {
 	app_context = &AppContext{
 		userId_websocket_map: make(map[string]*websocket.Conn),
 		ctx:                  context.Background(),
+=======
+type Group struct {
+	Name    string
+	Members map[string]bool
+}
+
+var groups = make(map[string]*Group) // groupId -> Group
+
+func (wsh webSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	userId := r.URL.Query().Get("userId")
+	c, err := wsh.upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("error %s when upgrading connection to websocket", err)
+		return
+>>>>>>> Stashed changes
 	}
 	init_redis(app_context)
 }
@@ -58,9 +84,93 @@ func handle_if_client_closed_connection(userId string, err error, c *websocket.C
 			log.Printf("error %s when trying to close websocket connectin for userId:%s", userId, err)
 			return
 		}
+<<<<<<< Updated upstream
 		log.Println("Connection closed by client")
 	} else {
 		log.Println("Error reading JSON:", err)
+=======
+		if msg.IsGroup {
+			wsh.handleGroupMessage(msg, userId)
+		} else {
+			wsh.handleDirectMessage(msg, userId)
+		}
+	}
+}
+
+func (wsh *webSocketHandler) handleGroupMessage(msg Message, fromUserId string) {
+	wsh.mu.RLock()
+	defer wsh.mu.RUnlock()
+
+	// If this is a group creation message
+	if len(msg.Members) > 0 {
+		// Create new group
+		groupId := msg.To // Using the 'To' field as groupId
+		groups[groupId] = &Group{
+			Name:    msg.GroupName,
+			Members: make(map[string]bool),
+		}
+
+		// Add all members to the group
+		for _, member := range msg.Members {
+			groups[groupId].Members[member] = true
+		}
+
+		// Notify all members about the group creation
+		notification := Message{
+			From:      fromUserId,
+			To:        groupId,
+			Body:      "You have been added to group: " + msg.GroupName,
+			IsGroup:   true,
+			GroupName: msg.GroupName,
+			Members:   msg.Members,
+		}
+
+		for member := range groups[groupId].Members {
+			if conn := userId_websocket_map[member]; conn != nil {
+				conn.WriteJSON(notification)
+			}
+		}
+		return
+	}
+
+	// Regular group message
+	group, exists := groups[msg.To]
+	if !exists {
+		log.Printf("Group %s not found", msg.To)
+		return
+	}
+
+	// Prepare message to broadcast
+	broadcastMsg := Message{
+		From:      fromUserId,
+		To:        msg.To,
+		Body:      msg.Body,
+		IsGroup:   true,
+		GroupName: group.Name,
+	}
+
+	// Send to all group members except sender
+	for member := range group.Members {
+		if member != fromUserId {
+			if conn := userId_websocket_map[member]; conn != nil {
+				conn.WriteJSON(broadcastMsg)
+			}
+		}
+	}
+}
+
+func (wsh *webSocketHandler) handleDirectMessage(msg Message, fromUserId string) {
+	wsh.mu.RLock()
+	defer wsh.mu.RUnlock()
+
+	if conn := userId_websocket_map[msg.To]; conn != nil {
+		writeMessage := Message{
+			From: fromUserId,
+			To:   msg.To,
+			Body: msg.Body,
+		}
+		conn.WriteJSON(writeMessage)
+>>>>>>> Stashed changes
 	}
 }
 
