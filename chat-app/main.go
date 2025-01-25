@@ -294,7 +294,7 @@ func writeIndividualMessage(message Message) {
 
 	if c == nil {
 		log.Printf("WebSocket connection not found for user: %s", message.To)
-
+		return
 	} else {
 		log.Printf("Found active WebSocket connection for user: %s", message.To)
 	}

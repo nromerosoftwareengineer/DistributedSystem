@@ -20,7 +20,7 @@ RUN go build -o main .
 FROM gcr.io/distroless/base-debian12
 
 # Set environment variables
-ENV PORT=8080
+ENV PORT=8100
 
 # Set the working directory
 WORKDIR /app
@@ -29,7 +29,7 @@ WORKDIR /app
 COPY --from=builder /app/main .
 
 # Expose the application's port
-EXPOSE 8080
+EXPOSE 8100
 
 # Command to run the application
 CMD ["./main"]

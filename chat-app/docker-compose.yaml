@@ -6,7 +6,7 @@ services:
     image: chat-app
     container_name: chat-app-1
     ports:
-      - "8101:8100"
+      - "8100"
     environment:
       IS_CONTAINER_RUN: true
     depends_on:
@@ -19,7 +19,7 @@ services:
     image: chat-app
     container_name: chat-app-2
     ports:
-      - "8102:8100"
+      - "8100"
     environment:
       IS_CONTAINER_RUN: true
     depends_on:
@@ -30,3 +30,17 @@ services:
     container_name: redis-container
     ports:
       - "6379:6379"
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "7070:7070"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/bin/sh", "/entrypoint.sh"]
+    command: ["nginx", "-g", "daemon off;"]
+    depends_on:
+      - app1
+      - app2
