@@ -29,6 +29,9 @@ func (ch *ConnectionHandler) AddUserConn(userId string, conn *websocket.Conn) {
 func (ch *ConnectionHandler) CloseUserConn(userId string) {
 	ch.connectionMutex.Lock()
 	defer ch.connectionMutex.Unlock()
+	if ch.wsmap[userId] == nil {
+		return
+	}
 	err := ch.wsmap[userId].Close()
 	delete(ch.wsmap, userId)
 	if err != nil {

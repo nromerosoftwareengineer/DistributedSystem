@@ -34,6 +34,7 @@ func (mh *MessageHandler) HandleMessageLoop(userId string) {
 
 		if err != nil {
 			log.Printf("websocket connection closed %v\n", err)
+			mh.ch.CloseUserConn(userId)
 			break
 		}
 
