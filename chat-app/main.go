@@ -14,9 +14,13 @@ func startApplication(appContext *runtime.AppContext) {
 	webSocketHandler := api.NewWebSocketHandler(appContext)
 	httpHandler := api.NewHttpHandler(appContext, appContext.MH.RedisClient)
 
-	http.Handle("/", webSocketHandler)
-	http.HandleFunc("/create-group", httpHandler.ServeHTTP)
-	go startServer()
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("POST /CreateGroup/", httpHandler.ServeHTTP)
+
+	mux.Handle("/message", webSocketHandler)
+
+	startServer(mux)
 }
 
 func main() {
@@ -33,9 +37,9 @@ func main() {
 	log.Println("\nSignal received, shutting down...")
 }
 
-func startServer() {
+func startServer(mux *http.ServeMux) {
 	log.Print("Starting server...")
-	err := http.ListenAndServe("0.0.0.0:8100", nil)
+	err := http.ListenAndServe("0.0.0.0:8100", mux)
 	if err != nil {
 		log.Fatalf("Error starting server: %s", err)
 	}
