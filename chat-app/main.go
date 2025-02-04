@@ -31,7 +31,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	startApplication(appContext)
+	go startApplication(appContext)
 	<-interrupt
 
 	log.Println("\nSignal received, shutting down...")
