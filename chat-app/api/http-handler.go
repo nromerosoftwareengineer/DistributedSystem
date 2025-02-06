@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"go_proj/runtime"
+	"go_proj/types"
 	"log"
 	"net/http"
 )
@@ -21,7 +22,7 @@ func NewHttpHandler(appContext *runtime.AppContext, redis *runtime.Redis) *HttpH
 
 func (httpHandler *HttpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
-	var group runtime.Group
+	var group types.Group
 	if err := json.NewDecoder(r.Body).Decode(&group); err != nil {
 		http.Error(w, "Error decoding JSON: "+err.Error(), http.StatusBadRequest)
 		return

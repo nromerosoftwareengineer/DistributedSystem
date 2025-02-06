@@ -3,6 +3,7 @@ package runtime
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"go_proj/types"
 	"log"
 )
 
@@ -22,7 +23,7 @@ func NewMessageHandler(handler *ConnectionHandler, redisClient *Redis) *MessageH
 }
 
 func (mh *MessageHandler) HandleMessageLoop(userId string) {
-	var msg Message
+	var msg types.Message
 	c := mh.ch.GetUserConn(userId)
 	for c != nil {
 		err := c.ReadJSON(&msg)
@@ -57,13 +58,13 @@ func (mh *MessageHandler) Close() {
 	mh.RedisClient.Close()
 }
 
-func (mh *MessageHandler) SendMessageToUsers(message *Message, users []string) {
+func (mh *MessageHandler) SendMessageToUsers(message *types.Message, users []string) {
 	for _, user := range users {
 		mh.sendMessageTo(message, user)
 	}
 }
 
-func (mh *MessageHandler) sendMessageTo(message *Message, to string) {
+func (mh *MessageHandler) sendMessageTo(message *types.Message, to string) {
 
 	c := mh.ch.GetUserConn(to)
 

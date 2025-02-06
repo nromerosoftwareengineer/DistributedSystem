@@ -2,10 +2,10 @@ package converter
 
 import (
 	msg "go_proj/database/entities"
-	"go_proj/runtime"
+	"go_proj/types"
 )
 
-func NewMessageInput(message runtime.Message) msg.MessageInput {
+func NewMessageInput(message types.Message) msg.MessageInput {
 	return msg.MessageInput{
 		FromUser:     message.From,
 		ToUser:       message.To,

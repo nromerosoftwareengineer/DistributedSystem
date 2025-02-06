@@ -1,4 +1,4 @@
-package runtime
+package types
 
 type Message struct {
 	From         string   `json:"from"`

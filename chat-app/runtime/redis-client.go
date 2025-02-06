@@ -7,6 +7,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go_proj/converter"
 	db "go_proj/database"
+	"go_proj/types"
 	"log"
 	"os"
 )
@@ -84,7 +85,7 @@ func (r *Redis) HandlePublishedMessages(mh *MessageHandler) {
 	defer dbService.Close()
 
 	for msg := range ch {
-		var message Message
+		var message types.Message
 		err := json.Unmarshal([]byte(msg.Payload), &message)
 		if err != nil {
 			log.Printf("Invalid JSON message: %s\n", msg.Payload)
@@ -103,8 +104,9 @@ func (r *Redis) HandlePublishedMessages(mh *MessageHandler) {
 		}
 
 		// Insert message to persistent post
+
+		mh.SendMessageToUsers(types.NewMessage(&message), toUsers)
 		messageID, err := dbService.InsertMessage(context.Background(), converter.NewMessageInput(message))
-		mh.SendMessageToUsers(NewMessage(&message), toUsers)
 
 		if err != nil {
 			log.Fatalf("Failed to insert message: %v", err)
@@ -115,14 +117,14 @@ func (r *Redis) HandlePublishedMessages(mh *MessageHandler) {
 	}
 }
 
-func (r *Redis) GetUsersInGroup(message Message) []string {
+func (r *Redis) GetUsersInGroup(message types.Message) []string {
 	groupJson, err := r.Get(message.GroupName)
 	if err != nil {
 		log.Printf("Error getting group json: %v\n", err)
 		return nil
 	}
 
-	var group Group
+	var group types.Group
 	err = json.Unmarshal([]byte(groupJson), &group)
 	if err != nil {
 		log.Printf("Error unmarshalling group: %v\n", err)
