@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"go_proj/converter"
+	db "go_proj/database"
 	"log"
 	"os"
 )
@@ -74,6 +76,13 @@ func (r *Redis) Publish(data []byte, channelName string) {
 
 func (r *Redis) HandlePublishedMessages(mh *MessageHandler) {
 	ch := r.pubsub.Channel()
+	dbService, err := db.NewDBService()
+
+	if err != nil {
+		log.Fatalf("Failed to initialize database service: %v", err)
+	}
+	defer dbService.Close()
+
 	for msg := range ch {
 		var message Message
 		err := json.Unmarshal([]byte(msg.Payload), &message)
@@ -92,7 +101,17 @@ func (r *Redis) HandlePublishedMessages(mh *MessageHandler) {
 		if toUsers == nil {
 			continue
 		}
+
+		// Insert message to persistent post
+		messageID, err := dbService.InsertMessage(context.Background(), converter.NewMessageInput(message))
 		mh.SendMessageToUsers(NewMessage(&message), toUsers)
+
+		if err != nil {
+			log.Fatalf("Failed to insert message: %v", err)
+		}
+
+		fmt.Printf("Successfully inserted message with ID: %d\n", messageID)
+
 	}
 }
 
